@@ -154,4 +154,6 @@ if (process.env.VERCEL !== "1") {
   });
 }
 
-export default server;
+export default (req: any, res: any) => {
+  server.emit("request", req, res);
+};
