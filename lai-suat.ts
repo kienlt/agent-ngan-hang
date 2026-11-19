@@ -1,6 +1,7 @@
 import { readFileSync } from "fs";
+import path from "path";
 
-const laiSuatData = JSON.parse(readFileSync("./lai-suat.json", "utf-8"));
+const laiSuatData = JSON.parse(readFileSync(path.join(process.cwd(), "lai-suat.json"), "utf-8"));
 
 export function tinhLai(soTien: number, coNguoiGioiThieu: boolean) {
   const laiCongBo = laiSuatData.kyHan12Thang.congBo;
