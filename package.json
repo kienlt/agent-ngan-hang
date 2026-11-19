@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google/genai": "^3.6.1",
     "typescript": "^7.0.2"
   },
   "devDependencies": {
