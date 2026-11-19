@@ -10,7 +10,15 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 async function hieuCauKhachAI(cau: string): Promise<{ soTien: number; coGT: boolean }> {
   if (!process.env.GEMINI_API_KEY) return hieuCauKhachCu(cau);
   try {
-    const prompt = `Bạn là nhân viên ngân hàng Tân Phú. Hãy trích xuất thông tin từ câu hỏi của khách thành JSON duy nhất, không giải thích thêm.
+        const prompt = `Bạn là nhân viên ngân hàng Tân Phú. Hãy trích xuất thông tin từ câu hỏi của khách thành JSON duy nhất, không giải thích thêm.
+Câu hỏi: "${cau}"
+Trả về đúng dạng: {"soTien": 123, "coGT": true}
+Quy tắc:
+- soTien là TỔNG số tiền gửi bằng VNĐ, số nguyên.
+- Tiếng lóng: "1 tỏi" = "1 toi" = "1 tỷ" = 1000000000. "2 tỏi" = 2000000000. "1 củ" = "1 cu" = 1 triệu = 1000000. "500 củ" = 500000000.
+- Nếu câu có chữ "cộng", "cong", "thêm", "với", "cộng thêm", "+" thì PHẢI CỘNG TẤT CẢ các số lại. Ví dụ: "500 triệu cộng 2 tỏi" = 500000000 + 2000000000 = 2500000000. "1 tỷ 200 triệu" = 1200000000.
+- coGT = true nếu khách có người giới thiệu, có coupon, có người quen giới thiệu. coGT = false nếu khách nói không có ai, đi một mình, tự đến, không có coupon.
+- Nếu không thấy số tiền thì soTien = 0.`;
 Câu hỏi: "${cau}"
 Trả về đúng dạng: {"soTien": 123, "coGT": true}
 Quy tắc:
