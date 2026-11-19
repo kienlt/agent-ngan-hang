@@ -1,0 +1,22 @@
+{
+  "name": "agent-ngan-hang",
+  "version": "1.0.0",
+  "description": "Agent tinh lai ngan hang Tan Phu - 24 test passed",
+  "main": "server.ts",
+  "type": "module",
+  "scripts": {
+    "start": "npx tsx server.ts",
+    "test": "npx playwright test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "typescript": "^7.0.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15"
+  }
+}
