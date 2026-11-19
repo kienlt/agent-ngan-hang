@@ -10,21 +10,15 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 async function hieuCauKhachAI(cau: string): Promise<{ soTien: number; coGT: boolean }> {
   if (!process.env.GEMINI_API_KEY) return hieuCauKhachCu(cau);
   try {
-        const prompt = `Bạn là nhân viên ngân hàng Tân Phú. Hãy trích xuất thông tin từ câu hỏi của khách thành JSON duy nhất, không giải thích thêm.
-Câu hỏi: "${cau}"
-Trả về đúng dạng: {"soTien": 123, "coGT": true}
-Quy tắc:
-- soTien là TỔNG số tiền gửi bằng VNĐ, số nguyên.
-- Tiếng lóng: "1 tỏi" = "1 toi" = "1 tỷ" = 1000000000. "2 tỏi" = 2000000000. "1 củ" = "1 cu" = 1 triệu = 1000000. "500 củ" = 500000000.
-- Nếu câu có chữ "cộng", "cong", "thêm", "với", "cộng thêm", "+" thì PHẢI CỘNG TẤT CẢ các số lại. Ví dụ: "500 triệu cộng 2 tỏi" = 500000000 + 2000000000 = 2500000000. "1 tỷ 200 triệu" = 1200000000.
-- coGT = true nếu khách có người giới thiệu, có coupon, có người quen giới thiệu. coGT = false nếu khách nói không có ai, đi một mình, tự đến, không có coupon.
-- Nếu không thấy số tiền thì soTien = 0.`;
-Câu hỏi: "${cau}"
-Trả về đúng dạng: {"soTien": 123, "coGT": true}
-Quy tắc:
-- soTien là số tiền gửi bằng VNĐ, số nguyên. Ví dụ: "700 triệu" = 700000000, "1 tỷ" = 1000000000, "1 tỷ 200 triệu" = 1200000000, "500 củ" = 500000000, "năm trăm triệu" = 500000000.
-- coGT = true nếu khách có người giới thiệu, có coupon, có người quen giới thiệu. coGT = false nếu khách nói không có ai, đi một mình, tự đến, không có coupon.
-- Nếu không thấy số tiền thì soTien = 0.`;
+    const prompt = `Ban la nhan vien ngan hang Tan Phu. Hay trich xuat thong tin tu cau hoi cua khach thanh JSON duy nhat, khong giai thich them.
+Cau hoi: "${cau}"
+Tra ve dung dang: {"soTien": 123, "coGT": true}
+Quy tac:
+- soTien la TONG so tien gui bang VND, so nguyen.
+- Tieng long: "1 toi" = "1 ty" = 1000000000. "2 toi" = 2000000000. "1 cu" = 1 trieu = 1000000. "500 cu" = 500000000.
+- Neu cau co chu "cong", "them", "voi", "cong them", "+" thi PHAI CONG TAT CA cac so lai. Vi du: "500 trieu cong 2 toi" = 500000000 + 2000000000 = 2500000000. "1 ty 200 trieu" = 1200000000.
+- coGT = true neu khach co nguoi gioi thieu, co coupon, co nguoi quen gioi thieu. coGT = false neu khach noi khong co ai, di mot minh, tu den, khong co coupon.
+- Neu khong thay so tien thi soTien = 0.`;
     const result = await ai.models.generateContent({ model: "gemini-2.5-flash", contents: prompt });
     const text = result.text || "";
     const jsonStr = text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
@@ -80,7 +74,6 @@ function hieuCauKhachCu(cau: string) {
   return { soTien, coGT };
 }
 
-// --- GUI TIN NHAN VE TELEGRAM ---
 async function guiTelegram(chatId: number, text: string) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) return;
@@ -92,7 +85,6 @@ async function guiTelegram(chatId: number, text: string) {
 }
 
 const server = createServer(async (req, res) => {
-  // --- DUONG DAN MOI CHO TELEGRAM ---
   if (req.url === "/telegram" && req.method === "POST") {
     let body = "";
     req.on("data", (chunk) => (body += chunk));
@@ -103,12 +95,10 @@ const server = createServer(async (req, res) => {
         if (!msg || !msg.text) { res.writeHead(200); res.end("ok"); return; }
         const chatId = msg.chat.id;
         const cau = msg.text;
-
         if (cau === "/start") {
           await guiTelegram(chatId, "Chao chi! Em la Agent Tinh Lai Tan Phu. Chi cu nhan nhu: 'Gui 700 trieu co nguoi gioi thieu thi duoc bao nhieu?'");
           res.writeHead(200); res.end("ok"); return;
         }
-
         const { soTien, coGT } = await hieuCauKhachAI(cau);
         if (soTien === 0) {
           await guiTelegram(chatId, "Em chua hieu so tien. Chi ghi lai giup em: 'Gui 700 trieu co nguoi gioi thieu'");
@@ -121,7 +111,6 @@ const server = createServer(async (req, res) => {
     });
     return;
   }
-
   if (req.url === "/") {
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
     res.end(` <h1>Agent Tinh Lai - Tan Phu</h1> <p>Lai cong bo: ${data.kyHan12Thang.congBo}% - Coupon: ${data.kyHan12Thang.couponGioiThieu}%</p> <h2>Cach 1: Bam nut (Buoi 3)</h2> <form action="/tinh" method="GET"> <label>So tien gui: <input type="number" name="tien" value="500000000" /></label><br><br> <label><input type="checkbox" name="gt" value="1" /> Co nguoi gioi thieu</label><br><br> <button>Tinh lai</button> </form> <hr> <h2>Cach 2: Hoi nhu nguoi that (Buoi 4 - MOI, co AI that)</h2> <form action="/hoi" method="GET"> <input type="text" name="cau" style="width:350px" placeholder="VD: Gui 1 ty 200 trieu co nguoi quen gioi thieu thi sao?" /> <button>Hoi Agent</button> </form> <hr><p>Telegram Bot: @Kent204_bot - Ban co the hoi truc tiep tren Telegram!</p> `);
