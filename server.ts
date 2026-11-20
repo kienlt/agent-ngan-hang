@@ -10,14 +10,25 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 async function hieuCauKhachAI(cau: string): Promise<{ soTien: number; coGT: boolean }> {
   if (!process.env.GEMINI_API_KEY) return hieuCauKhachCu(cau);
   try {
-    const prompt = `Ban la nhan vien ngan hang Tan Phu. Hay trich xuat thong tin tu cau hoi cua khach thanh JSON duy nhat, khong giai thich them.
-Cau hoi: "${cau}"
+    // B1: Dich tieng long thanh tieng chuan TRUOC khi dua cho AI
+    let cauChuan = cau.toLowerCase();
+    cauChuan = cauChuan.replace(/tỏi|toi/g, "ty");
+    cauChuan = cauChuan.replace(/\bcu\b|củ/g, "trieu");
+    cauChuan = cauChuan.replace(/bốn|bon/g, "4");
+    cauChuan = cauChuan.replace(/năm|nam/g, "5");
+
+    const prompt = `Ban la nhan vien ngan hang. Hay doc cau hoi sau va tra ve JSON duy nhat.
+Cau hoi goc: "${cau}"
+Cau hoi da dich: "${cauChuan}"
+QUAN TRONG NHAT: Neu cau co 2 so tien tro len, PHAI CONG HET TAT CA LAI. KHONG DUOC CHI LAY SO DAU TIEN.
+Vi du:
+- "400 trieu cong them 10 ty" = 400000000 + 10000000000 = 10400000000
+- "400 trieu cong them 2 ty" = 400000000 + 2000000000 = 2400000000
+- "500 trieu cong 2 ty" = 2500000000
+- "1 ty 200 trieu" = 1200000000
 Tra ve dung dang: {"soTien": 123, "coGT": true}
-Quy tac:
-- soTien la TONG so tien gui bang VND, so nguyen.
-- Tieng long: "1 toi" = "1 ty" = 1000000000. "2 toi" = 2000000000. "1 cu" = 1 trieu = 1000000. "500 cu" = 500000000.
-- Neu cau co chu "cong", "them", "voi", "cong them", "+" thi PHAI CONG TAT CA cac so lai. Vi du: "500 trieu cong 2 toi" = 500000000 + 2000000000 = 2500000000. "1 ty 200 trieu" = 1200000000.
-- coGT = true neu khach co nguoi gioi thieu, co coupon, co nguoi quen gioi thieu. coGT = false neu khach noi khong co ai, di mot minh, tu den, khong co coupon.
+- soTien la TONG, so nguyen, bang VND.
+- coGT = true neu co nguoi gioi thieu, co coupon. coGT = false neu khong co ai, tu den, mot minh.
 - Neu khong thay so tien thi soTien = 0.`;
     const result = await ai.models.generateContent({ model: "gemini-2.5-flash", contents: prompt });
     const text = result.text || "";
