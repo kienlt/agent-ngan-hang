@@ -39,11 +39,7 @@ Tra ve dung dang: {"soTien": 123, "coGT": true}
     const text = result.text || "";
     const jsonStr = text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
     const parsed = JSON.parse(jsonStr);
-let soTienFix = Number(parsed.soTien) || 0;
-if (cau.toLowerCase().includes("200tr") && cau.toLowerCase().includes("2")) {
-  soTienFix = 2200000000;
-}
-return { soTien: soTienFix, coGT: !!parsed.coGT };
+    return { soTien: Number(parsed.soTien) || 0, coGT: !!parsed.coGT };
   } catch (e) {
     return hieuCauKhachCu(cau);
   }
@@ -52,26 +48,29 @@ return { soTien: soTienFix, coGT: !!parsed.coGT };
 const TU_SO: any = { mot: 1, hai: 2, ba: 3, bon: 4, nam: 5, sau: 6, bay: 7, tam: 8, chin: 9, muoi: 10 };
 
 function docSoBangChu(cau: string) {
-  let chuan = cau.toLowerCase();
+  let chuan = cau.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
   for (const tu in TU_SO) chuan = chuan.replace(new RegExp("\\b" + tu + "\\b", "g"), String(TU_SO[tu]));
-  const parts = chuan.match(/\d+(?:[.,]\d+)?|tram|muoi|nghin|trieu|ty|ti/g);
+  const parts = chuan.match(/\d+(?:[.,]\d+)?|\b(?:tram|muoi|nghin|ngan|trieu|ty|ti|toi|tr)\b|(?<=\d)(?:trieu|tr|ty|ti|toi)\b/g);
   if (!parts) return 0;
   let tong = 0;
   let phanTram = 0;
   let phanMuoi = 0;
   let soHienTai = 0;
   let coSo = false;
+  let coSoHienTai = false;
   let coDonVi = false;
   for (const p of parts) {
-    if (/^\d/.test(p)) { soHienTai = Number(p.replace(",", ".")); coSo = true; }
+    if (/^\d/.test(p)) { soHienTai = Number(p.replace(",", ".")); coSo = true; coSoHienTai = true; }
     else if (p === "tram") { phanTram = (soHienTai || 1) * 100; soHienTai = 0; }
     else if (p === "muoi") { phanMuoi = (soHienTai || 1) * 10; soHienTai = 0; }
-    else if (p === "trieu" || p === "ty" || p === "ti" || p === "nghin") {
+    else if (p === "trieu" || p === "tr" || p === "ty" || p === "ti" || p === "toi" || p === "nghin" || p === "ngan") {
+      if (p === "toi" && !coSoHienTai) continue;
       coDonVi = true;
-      const donVi = p === "trieu" ? 1000000 : p === "nghin" ? 1000 : 1000000000;
+      const donVi = p === "trieu" || p === "tr" ? 1000000 : p === "nghin" || p === "ngan" ? 1000 : 1000000000;
       const nhom = phanTram + phanMuoi + (soHienTai || (phanTram === 0 && phanMuoi === 0 ? 1 : 0));
       tong += nhom * donVi;
       phanTram = 0; phanMuoi = 0; soHienTai = 0;
+      coSoHienTai = false;
     }
   }
   if (!coDonVi && coSo) {
@@ -82,23 +81,12 @@ function docSoBangChu(cau: string) {
 }
 
 function hieuCauKhachCu(cau: string) {
-  const cauThap = cau.toLowerCase();
+  const cauThap = cau.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
   let coGT = false;
   const coChuKhong = cauThap.includes("khong") || cauThap.includes("k co") || cauThap.includes("khong co ai") || cauThap.includes("tu den") || cauThap.includes("mot minh");
   if (coChuKhong) coGT = false;
   else if (cauThap.includes("gioi thieu") || cauThap.includes("coupon") || cauThap.includes("co nguoi")) coGT = true;
-  const coCauPhucTap = cauThap.includes("tram") || cauThap.includes("muoi") || /\b(mot|hai|ba|bon|nam|sau|bay|tam|chin)\b/.test(cauThap) || (cauThap.includes("ty") && cauThap.includes("trieu"));
-  let soTien = 0;
-  if (coCauPhucTap) soTien = docSoBangChu(cauThap);
-  else {
-    const timTy = cauThap.match(/([\d.,]+)\s*(ty|ti)/);
-    const timTrieu = cauThap.match(/([\d.,]+)\s*(trieu|tr)/);
-    const timSoTran = cauThap.match(/(\d{6,})/);
-    if (timTy) soTien = Number(timTy[1].replace(",", ".")) * 1000000000;
-    else if (timTrieu) soTien = Number(timTrieu[1].replace(",", ".")) * 1000000;
-    else if (timSoTran) soTien = Number(timSoTran[1]);
-    if (soTien === 0) soTien = docSoBangChu(cauThap);
-  }
+  const soTien = docSoBangChu(cauThap);
   return { soTien, coGT };
 }
 

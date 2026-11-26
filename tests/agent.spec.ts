@@ -32,6 +32,9 @@ const cases = [
   ["Gui 1 ty hai tram trieu khong co nguoi gioi thieu", "84.000.000"],
     ["Gui mot ty 2 tram trieu co nguoi gioi thieu", "115.200.000"],
   ["Gui mot ty 2 tram trieu khong co nguoi gioi thieu", "84.000.000"],
+    ["Gui 200tr cong them 2 toi co nguoi gioi thieu", "211.200.000"],
+    ["Tôi gửi 200tr, cộng thêm 2 tỏi, có người giới thiệu", "211.200.000"],
+    ["Gui 200tr co nguoi gioi thieu", "19.200.000"],
 ];
 
 for (const [cau, tienLai] of cases) {
