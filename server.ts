@@ -6,6 +6,7 @@ import { GoogleGenAI } from "@google/genai";
 
 const data = JSON.parse(readFileSync(path.join(process.cwd(), "lai-suat.json"), "utf-8"));
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+const nhoKhach = new Map<number, { soTien: number; coGT: boolean }>();
 
 async function hieuCauKhachAI(cau: string): Promise<{ soTien: number; coGT: boolean }> {
   if (!process.env.GEMINI_API_KEY) return hieuCauKhachCu(cau);
@@ -115,7 +116,14 @@ const server = createServer(async (req, res) => {
           await guiTelegram(chatId, "Da, em chao chi a! 👋\nEm la Agent Tinh Lai cua Tan Phu.\nChi cu nhan nhu dang noi chuyen voi em vay, vi du:\n'Gui 200 trieu cong them 2 toi co nguoi gioi thieu thi duoc bao nhieu?'\nEm tinh cho chi lien a!");
           res.writeHead(200); res.end("ok"); return;
         }
-        const { soTien, coGT } = await hieuCauKhachAI(cau);
+       // const { soTien, coGT } = await hieuCauKhachAI(cau);
+       let { soTien, coGT } = await hieuCauKhachAI(cau);
+const lanTruoc = nhoKhach.get(chatId);
+if (cau.toLowerCase().includes("them") && lanTruoc && soTien > 0) {
+  soTien = lanTruoc.soTien + soTien;
+  coGT = lanTruoc.coGT;
+}
+if (soTien > 0) nhoKhach.set(chatId, { soTien, coGT });
         if (soTien === 0) {
           await guiTelegram(chatId, "Em chua hieu so tien. Chi ghi lai giup em: 'Gui 700 trieu co nguoi gioi thieu'");
         } else {
