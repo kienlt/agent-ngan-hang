@@ -10,24 +10,29 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 async function hieuCauKhachAI(cau: string): Promise<{ soTien: number; coGT: boolean }> {
   if (!process.env.GEMINI_API_KEY) return hieuCauKhachCu(cau);
   try {
-    let cauChuan = cau.toLowerCase();
+    /*let cauChuan = cau.toLowerCase();
     cauChuan = cauChuan.replace(/tỏi|toi/g, "ty");
     cauChuan = cauChuan.replace(/\bcu\b|củ/g, "trieu");
     cauChuan = cauChuan.replace(/bốn|bon/g, "4");
     cauChuan = cauChuan.replace(/năm|nam/g, "5");
+*/
+   const prompt = `Ban la nhan vien ngan hang, rat gioi hieu tieng Viet noi chuyen hang ngay.
+Cau hoi: "${cau}"
 
-    const prompt = `Ban la nhan vien ngan hang. Hay doc cau hoi sau va tra ve JSON duy nhat.
-Cau hoi goc: "${cau}"
-Cau hoi da dich: "${cauChuan}"
-QUAN TRONG NHAT: Neu cau co 2 so tien tro len, PHAI CONG HET TAT CA LAI. KHONG DUOC CHI LAY SO DAU TIEN.
-Vi du:
-- "400 trieu cong them 10 ty" = 400000000 + 10000000000 = 10400000000
-- "400 trieu cong them 2 ty" = 400000000 + 2000000000 = 2400000000
-- "500 trieu cong 2 ty" = 2500000000
-- "1 ty 200 trieu" = 1200000000
+NHIEM VU CUA BAN: Tu sua loi go, sai dau, viet tat truoc khi tinh.
+QUY TAC HIEU TIENG LONG:
+- "toi / toi / tới / tỏi / ty / ti / tỷ" sau 1 con so deu la TY, vi du "2 toi" = 2 ty, "2 tới tôi" = 2 ty
+- "tr / trieu / củ / cu" deu la TRIEU, vi du "200tr" = 200 trieu
+- "gởi / gửi / gui" deu la GUI
+- "cong them / them / cong / voi" deu la CONG
+- "co nguoi gioi thieu / co nguoi quen / co coupon" deu la CO GIOI THIEU
+- "tôi" dung 1 minh thi la TOI (nguoi noi), khong phai TY. Chi khi "tôi" dung sau so tien moi la TY.
+
+QUAN TRONG NHAT: Neu co 2 so tien tro len, PHAI CONG HET LAI.
+Vi du: "200tr cong them 2 toi" = 200000000 + 2000000000 = 2200000000
 Tra ve dung dang: {"soTien": 123, "coGT": true}
-- soTien la TONG, so nguyen, bang VND.
-- coGT = true neu co nguoi gioi thieu, co coupon. coGT = false neu khong co ai, tu den, mot minh.
+- soTien la TONG, bang VND.
+- coGT = true neu co nguoi gioi thieu. coGT = false neu khong co ai.
 - Neu khong thay so tien thi soTien = 0.`;
 
     const result = await ai.models.generateContent({ model: "gemini-2.5-flash", contents: prompt });
